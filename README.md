@@ -1,1 +1,1 @@
-# Taller-programaci-n
+# Taller grupal programacion
