@@ -1,1 +1,60 @@
+#LIBRERÍAS
+library(readr)
+library(dplyr)
+library(nortest)
+library(gridExtra)
+library(grid)
+library(gtsummary)
+library(officer)
+library(flextable)
 
+
+#IMPORTAR DATA
+data <- read_csv("Actividad 2. Estadística y R/gene_expr.csv")
+
+
+#PREPARAMOS DATA: edad
+# Calculo el percentil 50 de la edad
+percentil_50 <- quantile(data$edad, 0.5)
+print(percentil_50)
+
+# Creo nueva columna de clasificación según el percentil 50
+data <- data %>%
+  mutate(Edad_50 = ifelse(edad < percentil_50, "< percentil 50", "≥ percentil 50"))
+
+#Formateo los estadísticos
+format_stat <- function(x) {
+  ifelse(x < 0.01, formatC(x, format = "e", digits = 1), round(x, 1))
+}
+
+
+#PLOT:TABLA DESCRIPTIVA
+data_summary <- data %>%
+  select(-trat_tumor, -...1, -id) %>%
+  tbl_summary(
+    by = "Edad_50", #agrupo por edad_cat
+    type = list(
+      all_continuous() ~ "continuous",
+      all_categorical() ~ "categorical"
+    ),
+    statistic = list(
+      all_continuous() ~ "{mean} ({sd})",
+      all_categorical() ~ "{n} ({p}%)"
+    ),
+    digits = list(
+      all_continuous() ~ format_stat,
+      all_categorical() ~ format_stat
+    )
+  ) %>%
+  add_p(
+    test = list(
+      all_continuous() ~ "wilcox.test", #como la variable edad_50 solo tiene dos nivles (<50 y >50), podemos hacer el wilcox.test
+      all_categorical() ~ "chisq.test"
+    ),
+    pvalue_fun = ~ style_pvalue(.x, digits = 3)
+  ) %>%
+  modify_header(label ~ "**Variable**") %>%
+  bold_labels()
+
+# Imprimir la tabla
+data_summary
