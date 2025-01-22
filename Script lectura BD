@@ -1,0 +1,5 @@
+#Lectura de la base de datos
+df <- read.csv("Dataset expresión genes.csv")
+
+#Localización de datos missing en la base de datos
+any(is.na(df))
